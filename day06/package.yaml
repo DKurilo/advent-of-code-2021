@@ -1,6 +1,6 @@
-name:                day05
+name:                day06
 version:             0.1.0.0
-github:              "DKurilo/day05"
+github:              "DKurilo/day06"
 license:             BSD3
 author:              "Dima Kurilo"
 maintainer:          "dkurilo@gmail.com"
@@ -17,17 +17,18 @@ extra-source-files:
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/DKurilo/day05#readme>
+description:         Please see the README on GitHub at <https://github.com/DKurilo/day06#readme>
 
 dependencies:
 - base >= 4.7 && < 5
+- split
 - containers
 
 library:
   source-dirs: src
 
 executables:
-  day05-exe:
+  day06-exe:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
@@ -35,10 +36,10 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - day05
+    - day06
 
 tests:
-  day05-test:
+  day06-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
@@ -46,4 +47,4 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - day05
+    - day06

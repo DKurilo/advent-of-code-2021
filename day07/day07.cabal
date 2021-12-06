@@ -4,11 +4,11 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 
-name:           day05
+name:           day07
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/DKurilo/day05#readme>
-homepage:       https://github.com/DKurilo/day05#readme
-bug-reports:    https://github.com/DKurilo/day05/issues
+description:    Please see the README on GitHub at <https://github.com/DKurilo/day07#readme>
+homepage:       https://github.com/DKurilo/day07#readme
+bug-reports:    https://github.com/DKurilo/day07/issues
 author:         Dima Kurilo
 maintainer:     dkurilo@gmail.com
 copyright:      Dima Kurilo
@@ -21,43 +21,40 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/DKurilo/day05
+  location: https://github.com/DKurilo/day07
 
 library
   exposed-modules:
       Lib
   other-modules:
-      Paths_day05
+      Paths_day07
   hs-source-dirs:
       src
   build-depends:
       base >=4.7 && <5
-    , containers
   default-language: Haskell2010
 
-executable day05-exe
+executable day07-exe
   main-is: Main.hs
   other-modules:
-      Paths_day05
+      Paths_day07
   hs-source-dirs:
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
-    , containers
-    , day05
+    , day07
   default-language: Haskell2010
 
-test-suite day05-test
+test-suite day07-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Paths_day05
+      Paths_day07
   hs-source-dirs:
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
-    , containers
-    , day05
+    , day07
   default-language: Haskell2010
