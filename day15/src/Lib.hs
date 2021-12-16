@@ -8,8 +8,11 @@ import qualified Data.HashMap.Strict as Map
 import qualified Data.HashSet as Set
 import Data.Hashable (Hashable)
 import Data.List (foldl', replicate, transpose)
+import qualified Data.Map as M
 import Data.Maybe (fromJust, fromMaybe)
-import qualified Data.PQueue.Prio.Min as PQ
+import qualified Data.PQueue.Min as PQ
+import qualified Data.PQueue.Prio.Min as PQM
+import qualified Data.Set as S
 
 type Matrix = [[Int]]
 
@@ -49,19 +52,19 @@ part1Solution' xss = last . head . (!! 14) . iterate mulMatrix2 $ g
 astarSearch :: (Eq a, Hashable a) => a -> (a -> Bool) -> (a -> [(a, Int)]) -> (a -> Int) -> Maybe (Int, [a])
 astarSearch startNode isGoalNode nextNodeFn heuristic =
   astar
-    (PQ.singleton (heuristic startNode) (startNode, 0))
+    (PQM.singleton (heuristic startNode) (startNode, 0))
     Set.empty
     (Map.singleton startNode 0)
     Map.empty
   where
     astar pq seen gscore tracks
-      | PQ.null pq = Nothing
+      | PQM.null pq = Nothing
       | isGoalNode node = Just (gcost, findPath tracks node)
       | Set.member node seen = astar pq' seen gscore tracks
       | otherwise = astar pq'' seen' gscore' tracks'
       where
-        (node, gcost) = snd . PQ.findMin $ pq
-        pq' = PQ.deleteMin pq
+        (node, gcost) = snd . PQM.findMin $ pq
+        pq' = PQM.deleteMin pq
         seen' = Set.insert node seen
         successors =
           filter
@@ -70,7 +73,7 @@ astarSearch startNode isGoalNode nextNodeFn heuristic =
                   && (not (s `Map.member` gscore) || g < (fromJust . Map.lookup s $ gscore))
             )
             $ successorsAndCosts node gcost
-        pq'' = foldl' (\q (s, g, h) -> PQ.insert (g + h) (s, g) q) pq' successors
+        pq'' = foldl' (\q (s, g, h) -> PQM.insert (g + h) (s, g) q) pq' successors
         gscore' = foldl' (\m (s, g, _) -> Map.insert s g m) gscore successors
         tracks' = foldl' (\m (s, _, _) -> Map.insert s node m) tracks successors
     successorsAndCosts node gcost = map (\(s, g) -> (s, gcost + g, heuristic s)) . nextNodeFn $ node
@@ -82,6 +85,31 @@ astarSearch startNode isGoalNode nextNodeFn heuristic =
 type Point = (Int, Int)
 
 type Graph = Map.HashMap Point [(Point, Int)]
+
+-- my not generic and a bit stupid implementation of A*.
+-- it's possible to make it faster by moving visited from HashMap to mutable vector
+astar :: (Point -> [(Point, Int)]) -> Point -> Point -> Maybe Int
+astar nextNodes pStart pEnd = doer (PQ.singleton (pStart, 0)) (Map.singleton pStart 0)
+  where
+    doer :: PQ.MinQueue (Point, Int) -> Map.HashMap Point Int -> Maybe Int
+    doer pvs visited
+      | PQ.null pvs = pEnd `Map.lookup` visited
+      | otherwise = doer ps' visited'
+      where
+        (ps', visited') = PQ.foldlU applyFront (PQ.empty, visited) pvs
+        applyFront (ps'', visited'') (pFrom, vFrom) = (ps''', visited''')
+          where
+            pvs' = nextNodes pFrom
+            (ps''', visited''') = foldl' applyNode (ps'', visited'') pvs'
+            applyNode (ps, visited) (p, v) =
+              case p `Map.lookup` visited of
+                Just r
+                  | r' < r -> psvs
+                  | otherwise -> (ps, visited)
+                _ -> psvs
+              where
+                r' = vFrom + v
+                psvs = ((p, r') `PQ.insert` ps, Map.insert p r' visited)
 
 mkGraph :: [[Int]] -> Graph
 mkGraph xss =
@@ -96,16 +124,39 @@ mkGraph xss =
     xMax = (length . head) xss - 1
     weight d x y x' y' = ((x, y), [((x', y'), xss !! y' !! x')])
 
-part1Solution :: [[Int]] -> Int
-part1Solution xss = fst . fromMaybe (-1, []) $ astarSearch (0, 0) (== (maxX, maxY)) nextNode (\(x, y) -> maxX + maxY - x - y)
+part1Solution'' :: [[Int]] -> Int
+part1Solution'' xss = fst . fromMaybe (-1, []) $ astarSearch (0, 0) (== (maxX, maxY)) nextNode (const 0)
   where
     maxY = length xss - 1
     maxX = (length . head) xss - 1
     g = mkGraph xss
     nextNode p = fromMaybe [] $ p `Map.lookup` g
 
+part1Solution :: [[Int]] -> Int
+part1Solution xss = fromMaybe (-1) $ astar nextNode (0, 0) (maxX, maxY)
+  where
+    maxY = length xss - 1
+    maxX = (length . head) xss - 1
+    g = mkGraph xss
+    nextNode p = fromMaybe [] $ p `Map.lookup` g
+
+part2Solution' :: [[Int]] -> Int
+part2Solution' xss = fst . fromMaybe (-1, []) $ astarSearch (0, 0) (== (maxX, maxY)) nextNode (const 0)
+  where
+    maxY = length xss * 5 - 1
+    maxX = (length . head) xss * 5 - 1
+    calcRisk d v = (d + v - 1) `mod` 9 + 1
+    xss' =
+      concat
+        . zipWith (map . map . calcRisk) [0 ..]
+        . replicate 5
+        . map (concat . zipWith (map . calcRisk) [0 ..] . replicate 5)
+        $ xss
+    g = mkGraph xss'
+    nextNode p = fromMaybe [] $ p `Map.lookup` g
+
 part2Solution :: [[Int]] -> Int
-part2Solution xss = fst . fromMaybe (-1, []) $ astarSearch (0, 0) (== (maxX, maxY)) nextNode (\(x, y) -> maxX + maxY - x - y)
+part2Solution xss = fromMaybe (-1) $ astar nextNode (0, 0) (maxX, maxY)
   where
     maxY = length xss * 5 - 1
     maxX = (length . head) xss * 5 - 1
