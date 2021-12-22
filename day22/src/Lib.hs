@@ -37,7 +37,9 @@ subIntervals ix@(Interval x1 x2) iy@(Interval y1 y2)
   | y1 > x1 && y2 >= x2 = [Interval x1 (y1 - 1)]
 
 subPlanes :: (Interval, Interval) -> (Interval, Interval) -> [(Interval, Interval)]
-subPlanes (ix1, iy1) (ix2, iy2) = [(ix', iy1) | ix' <- ixs] ++ [(ix, iy) | iy <- iys]
+subPlanes (ix1, iy1) (ix2, iy2)
+  | not (overlappingIntervals ix1 ix2) && not (overlappingIntervals iy1 iy2) = [(ix1, iy1)]
+  | otherwise = [(ix', iy1) | ix' <- ixs] ++ [(ix, iy) | iy <- iys]
   where
     ixs = subIntervals ix1 ix2
     ix = foldl (\i1 i2 -> head (subIntervals i1 i2)) ix1 ixs
